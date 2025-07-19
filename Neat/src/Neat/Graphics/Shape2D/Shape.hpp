@@ -5,7 +5,6 @@
 namespace Neat {
 class Shape {
  public:
-  Shape() = default;
   virtual ~Shape() = default;
 
   virtual void draw() const = 0;

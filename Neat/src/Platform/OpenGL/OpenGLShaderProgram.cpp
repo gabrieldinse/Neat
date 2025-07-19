@@ -2,6 +2,7 @@
 
 #include "Platform/OpenGL/OpenGLShaderDataType.hpp"
 #include "Platform/OpenGL/OpenGLShaderProgram.hpp"
+#include "Neat/Misc/ReadFile.hpp"
 
 #include <glad/glad.h>
 
@@ -79,19 +80,15 @@ Int32 OpenGLShaderProgram::getUniformLocation(const std::string &name) {
 }
 
 void OpenGLShaderProgram::build(const std::string &filepath) {
-  std::ifstream input_file(filepath, std::ios::in | std::ios::binary);
-
-  NT_CORE_ASSERT(input_file.is_open(),
-                 "Could not open file \"" + filepath + "\"");
-
-  std::stringstream file_reader_stream;
-  file_reader_stream << input_file.rdbuf();
-  std::string shader_sources = file_reader_stream.str();
-  input_file.close();
-
-  const auto &[vertex_source, fragment_source] =
-      splitShaderSources(shader_sources);
-  build(vertex_source, fragment_source);
+  readFile(filepath)
+      .transform([this](const std::string &shaderSources) {
+        const auto &[vertex_source, fragment_source] =
+            splitShaderSources(shaderSources);
+        build(vertex_source, fragment_source);
+      })
+      .or_else([](const FileError &error) {
+        NT_CORE_ERROR("Failed to read shader file: {0}", error);
+      });
 }
 
 void OpenGLShaderProgram::build(const std::string &vertexSource,
